@@ -1,3 +1,15 @@
-<GridLayout>
-    <nota:WebViewExt src="https://telex.hu"></nota:WebViewExt>
-</GridLayout>
+<FlexboxLayout
+  flexDirection="column"
+  (tap)="onTap($event)"
+  (swipe)="onSwipe($event)"
+>
+  <nota:WebViewExt
+    height="90%"
+    width="100%"
+    [debugMode]="true"
+    [src]="src$ | async"
+    [displayZoomControls]="false"
+    (loaded)="onLoaded($event)"
+  ></nota:WebViewExt>
+  <Label [text]="pages$ | async"></Label>
+</FlexboxLayout>
