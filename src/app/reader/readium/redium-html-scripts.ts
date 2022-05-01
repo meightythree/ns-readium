@@ -9,10 +9,12 @@ export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${rediumEvents(options)}
 `;
 
+const readiumContentElement = `document.getElementById("readium-content")`
+
 const rediumEvents = (options: ReadiumHtmlOptions) =>  `
     window.addEventListener('ns-bridge-ready', function (error) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
-        const width = document.body.getBoundingClientRect().width;
+        const width = ${readiumContentElement}.getBoundingClientRect().width;
         const clientWidth = document.body.clientWidth;
         window.nsWebViewBridge.emit('${DEBUG_EVENT}', JSON.stringify({ width, clientWidth }));
     });

@@ -18,7 +18,7 @@ export const rediumHtml = (options: ReadiumHtmlOptions) => {
         <style>${readiumCssAfter}</style>
     </head>
     <body scroll="no" style="overflow: hidden">
-        ${body}
+        <div id="readium-content">${body}</div>
         <script type="text/javascript">${readiumScripts(options)}</script>
     </body>
     `
