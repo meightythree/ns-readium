@@ -3,14 +3,21 @@
 >
   <nota:WebViewExt
     #webview
-    height="600"
+    height="80%"
     width="100%"
     [debugMode]="true"
     [src]="src$ | async"
     [displayZoomControls]="false"
     (loaded)="onLoaded($event)"
   ></nota:WebViewExt>
+
+  <!-- userView -->
   <Label text="mode: {{userView$ | async}} | pages: {{ pages$ | async }}"></Label>
-  <Button text="change mode" backgroundColor="blue" color="white" (tap)="onButtonTap()"></Button>
+  <Label text="pageOffsets: {{ pageOffsets$ | async | json }}"></Label>
+  <Button text="change mode" backgroundColor="blue" color="white" (tap)="onChangeUserView()"></Button>
+  <!-- userView -->
+
+  <!-- orientation -->
   <!-- <Label text="{{ pages$ | async }} | isLandscape$: {{ isLandscape$ | async | json }} | isPortrait$: {{ isPortrait$ | async | json }}"></Label> -->
+  <!-- orientation -->
 </FlexboxLayout>

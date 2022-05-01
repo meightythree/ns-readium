@@ -13,3 +13,8 @@ export enum ReadiumUserView {
     PagedOn = 'readium-paged-on',
     ScrollOn = 'readium-scroll-on',
 }
+
+export interface PageOffsets {
+    pageXOffset: number;
+    pageYOffset: number;
+}

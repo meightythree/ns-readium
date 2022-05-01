@@ -3,6 +3,7 @@ import { ReadiumHtmlOptions, ReadiumUserView } from "./redium.model";
 export const DEBUG_EVENT = "READIUM_DEBUG_EVENT";
 export const UPDATE_PAGES_EVENT = "UPDATE_PAGES_EVENT";
 export const UPDATE_ORIENTATION_EVENT = "UPDATE_ORIENTATION_EVENT";
+export const UPDATE_PAGE_OFFSETS_EVENT = "UPDATE_PAGE_OFFSETS_EVENT";
 
 export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${convertRemToPixels}
@@ -25,10 +26,20 @@ const rediumEvents = (options: ReadiumHtmlOptions) =>  `
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
         ${emitOrientation}
     });
+
+    window.addEventListener('scroll', function (event) {
+        ${emitPageOffset}
+    });
 `;
 
 const isPortrait = `window.matchMedia("(orientation: portrait)").matches`;
 const isLandscape = `window.matchMedia("(orientation: landscape)").matches`;
+
+const emitPageOffset =  `
+    const pageYOffset = window.pageYOffset;
+    const pageXOffset = window.pageXOffset;
+    window.nsWebViewBridge.emit('${UPDATE_PAGE_OFFSETS_EVENT}', JSON.stringify({ pageXOffset, pageYOffset }));
+`
 
 const emitOrientation = `
     const isPortrait = ${isPortrait};
