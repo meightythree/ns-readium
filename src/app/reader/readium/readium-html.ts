@@ -1,13 +1,14 @@
 import { readiumCssBefore } from './css/readium-css-before';
 import { readiumCssDefault } from './css/readium-css-default';
 import { readiumCssAfter } from './css/readium-css-after';
-import { ReadiumHtmlOptions } from './redium.model';
+import { ReadiumHtmlOptions, ReadiumUserView } from './redium.model';
 import { readiumScripts } from './redium-html-scripts';
 
 export const rediumHtml = (options: ReadiumHtmlOptions) => {
-    const { head, body } = options;
+    const { head, body, userView } = options;
+    const isPagedOn = ReadiumUserView.PagedOn === userView;
     return  `<!DOCTYPE html>
-    <html lang="en" style="--USER__view: readium-paged-on; --USER__fontOverride: readium-font-off; --RS__baseLineHeight: 1.5;">
+    <html lang="en" style="--USER__view: ${userView}; --USER__fontOverride: readium-font-off; --RS__baseLineHeight: 1.5;">
     <head>
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" />
@@ -17,7 +18,7 @@ export const rediumHtml = (options: ReadiumHtmlOptions) => {
         <style>${readiumCssDefault}</style>
         <style>${readiumCssAfter}</style>
     </head>
-    <body scroll="no" style="overflow: hidden">
+    <body ${ isPagedOn ? ' scroll="no" ' : ''} style="${isPagedOn ? ' overflow: hidden; ' : ''};">
         <div id="first-readium-element"></div>
         ${body}
         <div id="last-readium-element"></div>

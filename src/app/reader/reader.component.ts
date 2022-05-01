@@ -4,11 +4,11 @@ import { rediumHtml } from "./readium/readium-html";
 import { DEBUG_EVENT, UPDATE_ORIENTATION_EVENT, UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
 
 import { book } from "./readium/book";
-import { BehaviorSubject, of } from "rxjs";
-import { pluck } from "rxjs/operators";
+import { BehaviorSubject, combineLatest, of } from "rxjs";
+import { map, pluck, tap } from "rxjs/operators";
 import { SwipeGestureEventData, TapGestureEventData } from "@nativescript/core";
 import { LoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
-import { ReadiumOrientation } from "./readium/redium.model";
+import { ReadiumOrientation, ReadiumUserView } from "./readium/redium.model";
 
 @Component({
   selector: "ns-reader",
@@ -17,15 +17,20 @@ import { ReadiumOrientation } from "./readium/redium.model";
   providers: [ReadiumService],
 })
 export class ReaderComponent {
-    @ViewChild(WebViewExt) webview: ElementRef<WebViewExt>;
+    @ViewChild('webview') webview: ElementRef<WebViewExt>;
 
   pagesSource: BehaviorSubject<number> = new BehaviorSubject(0);
   pages$ = this.pagesSource.asObservable();
   webviewOrientationSource: BehaviorSubject<ReadiumOrientation> = new BehaviorSubject({ isLandscape: null, isPortrait: null });
   isLandscape$ = this.webviewOrientationSource.asObservable().pipe(pluck('isLandscape'));
   isPortrait$ = this.webviewOrientationSource.asObservable().pipe(pluck('isPortrait'));
+  userViewSource: BehaviorSubject<ReadiumUserView> = new BehaviorSubject(ReadiumUserView.PagedOn);
+  userView$ = this.userViewSource.asObservable();
 
-  src$ = of(rediumHtml({ body: book }));
+  src$ = combineLatest([this.userView$]).pipe(
+    map(([userView]) => rediumHtml({ body: book, userView })),
+    tap(src => setTimeout(() => this.webview.nativeElement.src = src))
+  );
 
   onTap(event: TapGestureEventData): void {}
 
@@ -37,5 +42,9 @@ export class ReaderComponent {
     webview.on(UPDATE_PAGES_EVENT, (msg) => this.pagesSource.next(Number(JSON.parse(msg.data))));
     webview.on(UPDATE_ORIENTATION_EVENT, (msg) => this.webviewOrientationSource.next(JSON.parse(msg.data)));
     webview.on(DEBUG_EVENT, (msg) => console.log(DEBUG_EVENT, msg.data));
+  }
+
+  onButtonTap() {
+    this.userViewSource.next(this.userViewSource.value  === ReadiumUserView.ScrollOn ? ReadiumUserView.PagedOn : ReadiumUserView.ScrollOn);
   }
 }
