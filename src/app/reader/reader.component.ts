@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild } from "@angular/core";
 import { ReadiumService } from "./readium/readium.service";
 import { rediumHtml } from "./readium/readium-html";
-import { UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
+import { DEBUG_EVENT, UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
 
 import { book } from "./readium/book";
 import { BehaviorSubject, of } from "rxjs";
@@ -27,7 +27,9 @@ export class ReaderComponent {
   onSwipe(event: SwipeGestureEventData): void {}
 
   onLoaded(event: LoadEventData): void {
+      console.log('loaded')
     const webview = event.object;
     webview.on(UPDATE_PAGES_EVENT, (msg) => this.pagesSource.next(Number(JSON.parse(msg.data))));
+    webview.on(DEBUG_EVENT, (msg) => console.log(DEBUG_EVENT, msg.data));
   }
 }
