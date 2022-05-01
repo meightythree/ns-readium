@@ -11,5 +11,5 @@
     [displayZoomControls]="false"
     (loaded)="onLoaded($event)"
   ></nota:WebViewExt>
-  <Label [text]="pages$ | async"></Label>
+  <Label text="{{ pages$ | async }} | isLandscape$: {{ isLandscape$ | async | json }} | isPortrait$: {{ isPortrait$ | async | json }}"></Label>
 </FlexboxLayout>
