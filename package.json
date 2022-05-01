@@ -8,6 +8,16 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "lint": "npx eslint --ext=ts src/",
+    "stylelint": "npx stylelint \"./src/**/*.{scss,css}\"",
+    "jsonlint": "npx jsonlint-cli \"./src/**/*.{json,JSON}\"",
+    "mdlint": "npx markdownlint **/*.{md,MD} -i node_modules -c mdlint.json",
+    "debug:android": "ns debug android",
+    "debug:ios": "ns debug ios",
+    "debug:android:prod": "ns debug android --env.production",
+    "debug:ios:prod": "ns debug ios --env.production"
+  },
   "files": [
     "App_Resources",
     "hooks",
@@ -46,6 +56,7 @@
   },
   "devDependencies": {
     "@angular/compiler-cli": "~12.0.0",
+    "@nativescript/android": "8.0.0",
     "@nativescript/types": "~8.0.0",
     "@nativescript/webpack": "beta",
     "@ngtools/webpack": "~12.0.0",
