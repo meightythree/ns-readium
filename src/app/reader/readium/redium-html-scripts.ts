@@ -4,7 +4,7 @@ export const DEBUG_EVENT = "READIUM_DEBUG_EVENT";
 export const UPDATE_PAGES_EVENT = "UPDATE_PAGES_EVENT";
 export const UPDATE_ORIENTATION_EVENT = "UPDATE_ORIENTATION_EVENT";
 export const UPDATE_PAGE_OFFSETS_EVENT = "UPDATE_PAGE_OFFSETS_EVENT";
-export const UPDATE_CLIENT_SIZE_EVENT = "UPDATE_CLIENT_SIZE_EVENT";
+export const UPDATE_DIMENSIONS_EVENT = "UPDATE_DIMENSIONS_EVENT";
 
 export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${convertRemToPixels}
@@ -20,14 +20,14 @@ const readiumEvents = (options: ReadiumHtmlOptions) =>  `
     window.addEventListener('ns-bridge-ready', function (error) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
         ${emitOrientation}
-        ${emitClientSize}
+        ${emitDimensions}
         window.nsWebViewBridge.emit('${DEBUG_EVENT}', '');
     });
 
     window.addEventListener('resize', function (event) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
         ${emitOrientation}
-        ${emitClientSize}
+        ${emitDimensions}
     });
     
     window.addEventListener('scroll', function (event) {
@@ -50,10 +50,12 @@ const emitOrientation = `
     window.nsWebViewBridge.emit('${UPDATE_ORIENTATION_EVENT}', JSON.stringify({ isLandscape, isPortrait }));
 `;
 
-const emitClientSize = `
+const emitDimensions = `
     const clientHeight = document.body.clientHeight;
     const clientWidth = document.body.clientWidth;
-    window.nsWebViewBridge.emit('${UPDATE_CLIENT_SIZE_EVENT}', JSON.stringify({ clientHeight, clientWidth }));
+    const innerHeight = window.innerHeight;
+    const innerWidth = window.innerWidth;
+    window.nsWebViewBridge.emit('${UPDATE_DIMENSIONS_EVENT}', JSON.stringify({ clientHeight, clientWidth, innerHeight, innerWidth }));
 `;
 
 const calculateColumns = `function calculateColumns() {
@@ -70,7 +72,7 @@ const calculatePages = (userView: ReadiumUserView) => ` function calculatePages(
     if ('${userView}' === '${ReadiumUserView.PagedOn}') {
         return calculateColumns();
     } else if ('${userView}' === '${ReadiumUserView.ScrollOn}') {
-        return 0;
+        return Math.ceil(Number(document.body.clientHeight / window.innerHeight));
     }
 }`;
 

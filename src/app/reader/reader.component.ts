@@ -1,14 +1,14 @@
 import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import { ReadiumService } from "./readium/readium.service";
 import { rediumHtml } from "./readium/readium-html";
-import { DEBUG_EVENT, UPDATE_ORIENTATION_EVENT, UPDATE_PAGE_OFFSETS_EVENT, UPDATE_CLIENT_SIZE_EVENT, UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
+import { DEBUG_EVENT, UPDATE_ORIENTATION_EVENT, UPDATE_PAGE_OFFSETS_EVENT, UPDATE_DIMENSIONS_EVENT, UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
 
 import { book } from "./readium/book";
 import { BehaviorSubject, combineLatest, of } from "rxjs";
 import { map, pluck, tap } from "rxjs/operators";
 import { SwipeGestureEventData, TapGestureEventData } from "@nativescript/core";
 import { LoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
-import { ClientSize, PageOffsets, ReadiumOrientation, ReadiumUserView } from "./readium/redium.model";
+import { Dimensions, PageOffsets, ReadiumOrientation, ReadiumUserView } from "./readium/redium.model";
 
 @Component({
   selector: "ns-reader",
@@ -30,8 +30,8 @@ export class ReaderComponent implements OnInit {
   pageOffsets$ = this.pageOffsetsSource.asObservable();
   webviewLoadedSource = new BehaviorSubject(false);
   webviewLoaded$ = this.webviewLoadedSource.asObservable();
-  clientSizeSource: BehaviorSubject<ClientSize> = new BehaviorSubject({clientHeight: null, clientWidth: null})
-  clientSize$ = this.clientSizeSource.asObservable();
+  dimensionsSource: BehaviorSubject<Dimensions> = new BehaviorSubject({clientHeight: null, clientWidth: null, innerHeight: null, innerWidth: null})
+  dimensions$ = this.dimensionsSource.asObservable();
 
   src$ = combineLatest([this.userView$])
     .pipe(
@@ -41,9 +41,7 @@ export class ReaderComponent implements OnInit {
 
   constructor() {}
 
-  ngOnInit(): void {
-    
-  }
+  ngOnInit(): void { }
 
   onTap(event: TapGestureEventData): void {}
 
@@ -51,12 +49,11 @@ export class ReaderComponent implements OnInit {
 
   onLoaded(event: LoadEventData): void {
     this.webviewLoadedSource.next(true);
-    console.log('loaded')
     const webview = event.object;
     webview.on(UPDATE_PAGES_EVENT, (msg) => this.pagesSource.next(Number(JSON.parse(msg.data))));
     webview.on(UPDATE_ORIENTATION_EVENT, (msg) => this.webviewOrientationSource.next(JSON.parse(msg.data)));
     webview.on(UPDATE_PAGE_OFFSETS_EVENT, (msg) => this.pageOffsetsSource.next(JSON.parse(msg.data)));
-    webview.on(UPDATE_CLIENT_SIZE_EVENT, (msg) => this.clientSizeSource.next(JSON.parse(msg.data)));
+    webview.on(UPDATE_DIMENSIONS_EVENT, (msg) => this.dimensionsSource.next(JSON.parse(msg.data)));
     webview.on(DEBUG_EVENT, (msg) => console.log(DEBUG_EVENT, msg.data));
   }
 

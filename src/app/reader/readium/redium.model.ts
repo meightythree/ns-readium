@@ -19,7 +19,9 @@ export interface PageOffsets {
     pageYOffset: number;
 }
 
-export interface ClientSize {
+export interface Dimensions {
     clientHeight: number;
     clientWidth: number;
+    innerHeight: number;
+    innerWidth: number;
 }
