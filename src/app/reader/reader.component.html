@@ -14,6 +14,7 @@
   <!-- userView -->
   <Label text="mode: {{userView$ | async}} | pages: {{ pages$ | async }}"></Label>
   <Label text="pageOffsets: {{ pageOffsets$ | async | json }}"></Label>
+  <Label text="clientSize: {{ clientSize$ | async | json }}"></Label>
   <Button text="change mode" backgroundColor="blue" color="white" (tap)="onChangeUserView()"></Button>
   <!-- userView -->
 

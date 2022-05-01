@@ -4,6 +4,7 @@ export const DEBUG_EVENT = "READIUM_DEBUG_EVENT";
 export const UPDATE_PAGES_EVENT = "UPDATE_PAGES_EVENT";
 export const UPDATE_ORIENTATION_EVENT = "UPDATE_ORIENTATION_EVENT";
 export const UPDATE_PAGE_OFFSETS_EVENT = "UPDATE_PAGE_OFFSETS_EVENT";
+export const UPDATE_CLIENT_SIZE_EVENT = "UPDATE_CLIENT_SIZE_EVENT";
 
 export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${convertRemToPixels}
@@ -12,21 +13,23 @@ export const readiumScripts = (options: ReadiumHtmlOptions) => `
     document.isPortrait = ${isPortrait};
     document.isLandscape = ${isLandscape};
     ${calculatePages(options.userView)}
-    ${rediumEvents(options)}
+    ${readiumEvents(options)}
 `;
 
-const rediumEvents = (options: ReadiumHtmlOptions) =>  `
+const readiumEvents = (options: ReadiumHtmlOptions) =>  `
     window.addEventListener('ns-bridge-ready', function (error) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
         ${emitOrientation}
+        ${emitClientSize}
         window.nsWebViewBridge.emit('${DEBUG_EVENT}', '');
     });
 
     window.addEventListener('resize', function (event) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
         ${emitOrientation}
+        ${emitClientSize}
     });
-
+    
     window.addEventListener('scroll', function (event) {
         ${emitPageOffset}
     });
@@ -47,6 +50,12 @@ const emitOrientation = `
     window.nsWebViewBridge.emit('${UPDATE_ORIENTATION_EVENT}', JSON.stringify({ isLandscape, isPortrait }));
 `;
 
+const emitClientSize = `
+    const clientHeight = document.body.clientHeight;
+    const clientWidth = document.body.clientWidth;
+    window.nsWebViewBridge.emit('${UPDATE_CLIENT_SIZE_EVENT}', JSON.stringify({ clientHeight, clientWidth }));
+`;
+
 const calculateColumns = `function calculateColumns() {
     const columnWidth = convertRemToPixels(getComputedStyle(document.body).getPropertyValue('--RS__maxLineLength'));
     const firstReadiumElement = document.getElementById('first-readium-element');
@@ -60,7 +69,7 @@ const calculateColumns = `function calculateColumns() {
 const calculatePages = (userView: ReadiumUserView) => ` function calculatePages() {
     if ('${userView}' === '${ReadiumUserView.PagedOn}') {
         return calculateColumns();
-    } else if (${isLandscape}) {
+    } else if ('${userView}' === '${ReadiumUserView.ScrollOn}') {
         return 0;
     }
 }`;

@@ -18,3 +18,8 @@ export interface PageOffsets {
     pageXOffset: number;
     pageYOffset: number;
 }
+
+export interface ClientSize {
+    clientHeight: number;
+    clientWidth: number;
+}
