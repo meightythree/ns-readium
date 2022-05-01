@@ -7,13 +7,23 @@ export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${convertRemToPixels}
     ${calculateColumns}
     document.calculateColumns = calculateColumns;
+    document.isPortrait = ${isPortrait};
+    document.isLandscape = ${isLandscape};
     ${rediumEvents(options)}
 `;
 
 const rediumEvents = (options: ReadiumHtmlOptions) =>  `
     window.addEventListener('ns-bridge-ready', function (error) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculateColumns());
-        window.nsWebViewBridge.emit('${DEBUG_EVENT}', JSON.stringify(calculateColumns()));
+        const isPortrait = ${isPortrait};
+        const isLandscape = ${isLandscape};
+        window.nsWebViewBridge.emit('${DEBUG_EVENT}', JSON.stringify({ isLandscape, isPortrait }));
+    });
+
+    window.addEventListener('resize', function (event) {
+        const isPortrait = ${isPortrait};
+        const isLandscape = ${isLandscape};
+        window.nsWebViewBridge.emit('${DEBUG_EVENT}', JSON.stringify({ isLandscape, isPortrait }));
     });
 `;
 
@@ -33,3 +43,6 @@ function convertRemToPixels(rem) {
     return Number(rem.replace('rem', '')) * parseFloat(getComputedStyle(document.documentElement).fontSize);
 }
 `;
+
+const isPortrait = `window.matchMedia("(orientation: portrait)").matches`;
+const isLandscape = `window.matchMedia("(orientation: landscape)").matches`;
