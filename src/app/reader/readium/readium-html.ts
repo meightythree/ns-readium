@@ -2,7 +2,9 @@ import { readiumCssBefore } from './css/readium-css-before';
 import { readiumCssDefault } from './css/readium-css-default';
 import { readiumCssAfter } from './css/readium-css-after';
 import { ReadiumHtmlOptions, ReadiumUserView } from './redium.model';
-import { readiumScripts } from './redium-html-scripts';
+import { readiumScripts } from './scripts/redium-html-scripts';
+import { hammer } from './scripts/hammer'
+import { gestureEvents } from './scripts/gestures'
 
 export const readiumHtml = (options: ReadiumHtmlOptions) => {
     const { head, body, userView } = options;
@@ -17,12 +19,15 @@ export const readiumHtml = (options: ReadiumHtmlOptions) => {
         <style>${readiumCssBefore}</style>
         <style>${readiumCssDefault}</style>
         <style>${readiumCssAfter}</style>
+        <script type="text/javascript">${hammer}</script>
     </head>
     <body ${ isPagedOn ? ' scroll="no" ' : ''} style="${isPagedOn ? ' overflow: hidden; ' : ''};">
         <div id="first-readium-element"></div>
         ${body}
         <div id="last-readium-element"></div>
         <script type="text/javascript">${readiumScripts(options)}</script>
+        <script type="text/javascript">${gestureEvents}</script>
     </body>
+    </html>
     `
 }

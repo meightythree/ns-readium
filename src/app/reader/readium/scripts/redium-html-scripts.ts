@@ -1,4 +1,4 @@
-import { ReadiumHtmlOptions, ReadiumUserView } from "./redium.model";
+import { ReadiumHtmlOptions, ReadiumUserView } from "../redium.model";
 
 export const DEBUG_EVENT = "READIUM_DEBUG_EVENT";
 export const UPDATE_PAGES_EVENT = "UPDATE_PAGES_EVENT";
