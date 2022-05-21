@@ -1,14 +1,16 @@
 import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import { ReadiumService } from "./readium/readium.service";
-import { rediumHtml } from "./readium/readium-html";
+import { readiumHtml } from "./readium/readium-html";
 import { DEBUG_EVENT, UPDATE_ORIENTATION_EVENT, UPDATE_PAGE_OFFSETS_EVENT, UPDATE_DIMENSIONS_EVENT, UPDATE_PAGES_EVENT } from "./readium/redium-html-scripts";
 
 import { book } from "./readium/book";
-import { BehaviorSubject, combineLatest, of } from "rxjs";
-import { map, pluck, tap } from "rxjs/operators";
+import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { first, map, pluck, tap } from "rxjs/operators";
 import { SwipeGestureEventData, TapGestureEventData } from "@nativescript/core";
 import { LoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
 import { Dimensions, PageOffsets, ReadiumOrientation, ReadiumUserView } from "./readium/redium.model";
+
+const readFirst = <T>(obs$: Observable<T>): Promise<T> => obs$.pipe(first()).toPromise();
 
 @Component({
   selector: "ns-reader",
@@ -30,22 +32,32 @@ export class ReaderComponent implements OnInit {
   pageOffsets$ = this.pageOffsetsSource.asObservable();
   webviewLoadedSource = new BehaviorSubject(false);
   webviewLoaded$ = this.webviewLoadedSource.asObservable();
-  dimensionsSource: BehaviorSubject<Dimensions> = new BehaviorSubject({clientHeight: null, clientWidth: null, innerHeight: null, innerWidth: null})
+  dimensionsSource: BehaviorSubject<Dimensions> = new BehaviorSubject({clientHeight: null, clientWidth: null, innerHeight: null, innerWidth: null});
   dimensions$ = this.dimensionsSource.asObservable();
 
   src$ = combineLatest([this.userView$])
     .pipe(
-      map(([userView]) => rediumHtml({ body: book, userView })),
+      map(([userView]) => readiumHtml({ body: book, userView })),
       tap(src => setTimeout(() => this.webview.nativeElement.src = src))
     );
 
   constructor() {}
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
-  onTap(event: TapGestureEventData): void {}
+  async onTap(event: TapGestureEventData): Promise<void> {
+    const userView = await readFirst(this.userView$);
+    if (ReadiumUserView.PagedOn === userView) {
 
-  onSwipe(event: SwipeGestureEventData): void {}
+    }
+  }
+
+  async onSwipe(event: SwipeGestureEventData): Promise<void> {
+    const userView = await readFirst(this.userView$);
+    if (ReadiumUserView.PagedOn === userView) {
+
+    }
+  }
 
   onLoaded(event: LoadEventData): void {
     this.webviewLoadedSource.next(true);

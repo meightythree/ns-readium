@@ -4,7 +4,7 @@ import { readiumCssAfter } from './css/readium-css-after';
 import { ReadiumHtmlOptions, ReadiumUserView } from './redium.model';
 import { readiumScripts } from './redium-html-scripts';
 
-export const rediumHtml = (options: ReadiumHtmlOptions) => {
+export const readiumHtml = (options: ReadiumHtmlOptions) => {
     const { head, body, userView } = options;
     const isPagedOn = ReadiumUserView.PagedOn === userView;
     return  `<!DOCTYPE html>
