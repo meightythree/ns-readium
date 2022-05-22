@@ -1,6 +1,7 @@
 import { ReadiumHtmlOptions, ReadiumUserView } from "../redium.model";
 
 export const DEBUG_EVENT = "READIUM_DEBUG_EVENT";
+export const NS_BRIDGE_READY = "READIUM_NS_BRIDGE_READY";
 export const UPDATE_PAGES_EVENT = "UPDATE_PAGES_EVENT";
 export const UPDATE_ORIENTATION_EVENT = "UPDATE_ORIENTATION_EVENT";
 export const UPDATE_PAGE_OFFSETS_EVENT = "UPDATE_PAGE_OFFSETS_EVENT";
@@ -19,6 +20,7 @@ export const readiumScripts = (options: ReadiumHtmlOptions) => `
 const readiumEvents = (options: ReadiumHtmlOptions) =>  `
     window.addEventListener('ns-bridge-ready', function (error) {
         window.nsWebViewBridge.emit('${UPDATE_PAGES_EVENT}', calculatePages());
+        window.nsWebViewBridge.emit('${NS_BRIDGE_READY}', '');
         ${emitOrientation}
         ${emitDimensions}
         window.nsWebViewBridge.emit('${DEBUG_EVENT}', '');

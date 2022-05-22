@@ -11,6 +11,12 @@
     (loaded)="onLoaded($event)"
   ></nota:WebViewExt>
 
+  <FlexboxLayout flexDirection="row">
+    <Label [text]="activePage$ | async"></Label>
+    <Slider minValue="0" [maxValue]="pages$ | async" (valueChange)="onSliderValueChange($event)"></Slider>
+    <Label [text]="pages$ | async"></Label>
+  </FlexboxLayout>
+
   <!-- userView -->
   <Label text="mode: {{userView$ | async}} | pages: {{ pages$ | async }}"></Label>
   <Label text="pageOffsets: {{ pageOffsets$ | async | json }}"></Label>
