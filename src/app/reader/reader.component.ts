@@ -1,16 +1,31 @@
 import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
+import {
+  LoadEventData,
+  WebViewEventData,
+  WebViewExt,
+} from "@nota/nativescript-webview-ext";
+import { combineLatest } from "rxjs";
+import { map, tap } from "rxjs/operators";
+import { Slider } from "@nativescript/core";
+
 import { ReadiumService } from "./readium/readium.service";
 import { readiumHtml } from "./readium/readium-html";
-import { DEBUG_EVENT, UPDATE_ORIENTATION_EVENT, UPDATE_PAGE_OFFSETS_EVENT, UPDATE_DIMENSIONS_EVENT, UPDATE_PAGES_EVENT, NS_BRIDGE_READY } from "./readium/scripts/redium-html-scripts";
+import {
+  DEBUG_EVENT,
+  UPDATE_ORIENTATION_EVENT,
+  UPDATE_PAGE_OFFSETS_EVENT,
+  UPDATE_DIMENSIONS_EVENT,
+  UPDATE_PAGES_EVENT,
+  NS_BRIDGE_READY,
+} from "./readium/scripts/redium-html-scripts";
 import { book } from "./readium/book";
-import { BehaviorSubject, combineLatest, Observable } from "rxjs";
-import { first, map, pluck, tap } from "rxjs/operators";
-import { Slider, SwipeGestureEventData, TapGestureEventData } from "@nativescript/core";
-import { LoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
-import { Dimensions, PageOffsets, ReadiumOrientation, ReadiumUserView } from "./readium/redium.model";
-import { SWIPELEFT_EVENT, SWIPERIGHT_EVENT, TAP_EVENT } from "./readium/scripts/gestures";
-
-const readFirst = <T>(obs$: Observable<T>): Promise<T> => obs$.pipe(first()).toPromise();
+import { ReadiumUserView } from "./readium/redium.model";
+import {
+  SWIPELEFT_EVENT,
+  SWIPERIGHT_EVENT,
+  TAP_EVENT,
+} from "./readium/scripts/gestures";
+import { ReaderService } from "./services/reader.service";
 
 @Component({
   selector: "ns-reader",
@@ -19,72 +34,79 @@ const readFirst = <T>(obs$: Observable<T>): Promise<T> => obs$.pipe(first()).toP
   providers: [ReadiumService],
 })
 export class ReaderComponent implements OnInit {
-  @ViewChild('webview') webview: ElementRef<WebViewExt>;
+  @ViewChild("webview") webview: ElementRef<WebViewExt>;
 
-  pagesSource: BehaviorSubject<number> = new BehaviorSubject(0);
-  pages$ = this.pagesSource.asObservable();
-  activePageSource: BehaviorSubject<number> = new BehaviorSubject(0);
-  activePage$ = this.pagesSource.asObservable();
-  webviewOrientationSource: BehaviorSubject<ReadiumOrientation> = new BehaviorSubject({ isLandscape: null, isPortrait: null });
-  isLandscape$ = this.webviewOrientationSource.asObservable().pipe(pluck('isLandscape'));
-  isPortrait$ = this.webviewOrientationSource.asObservable().pipe(pluck('isPortrait'));
-  userViewSource: BehaviorSubject<ReadiumUserView> = new BehaviorSubject(ReadiumUserView.PagedOn);
-  userView$ = this.userViewSource.asObservable();
-  pageOffsetsSource: BehaviorSubject<PageOffsets> = new BehaviorSubject({pageXOffset: 0, pageYOffset: 0});
-  pageOffsets$ = this.pageOffsetsSource.asObservable();
-  webviewLoadedSource = new BehaviorSubject(false);
-  webviewLoaded$ = this.webviewLoadedSource.asObservable();
-  dimensionsSource: BehaviorSubject<Dimensions> = new BehaviorSubject({clientHeight: null, clientWidth: null, innerHeight: null, innerWidth: null});
-  dimensions$ = this.dimensionsSource.asObservable();
+  src$ = combineLatest([this.readerService.userView$]).pipe(
+    map(([userView]) => readiumHtml({ body: book, userView })),
+    tap((src) => setTimeout(() => (this.webview.nativeElement.src = src)))
+  );
 
-  src$ = combineLatest([this.userView$])
-    .pipe(
-      map(([userView]) => readiumHtml({ body: book, userView })),
-      tap(src => setTimeout(() => this.webview.nativeElement.src = src))
-    );
-
-  constructor() {}
+  constructor(public readonly readerService: ReaderService) {}
 
   ngOnInit(): void {}
 
-  onNSBridgreReady(): void {
-
-  }
-
-  async onTap(event: TapGestureEventData): Promise<void> {
-    const userView = await readFirst(this.userView$);
-    if (ReadiumUserView.PagedOn === userView) {
-
-    }
-  }
-
-  async onSwipe(event: SwipeGestureEventData): Promise<void> {
-    const userView = await readFirst(this.userView$);
-    if (ReadiumUserView.PagedOn === userView) {
-
-    }
-  }
-
   onLoaded(event: LoadEventData): void {
-    this.webviewLoadedSource.next(true);
+    this.readerService.webviewLoadedSource.next(true);
     const webview = event.object;
-    webview.on(DEBUG_EVENT, (msg) => console.log(DEBUG_EVENT, msg.data));
-    webview.on(NS_BRIDGE_READY, (_) => this.onNSBridgreReady());
-    webview.on(UPDATE_PAGES_EVENT, (msg) => this.pagesSource.next(Number(JSON.parse(msg.data))));
-    webview.on(UPDATE_ORIENTATION_EVENT, (msg) => this.webviewOrientationSource.next(JSON.parse(msg.data)));
-    webview.on(UPDATE_PAGE_OFFSETS_EVENT, (msg) => this.pageOffsetsSource.next(JSON.parse(msg.data)));
-    webview.on(UPDATE_DIMENSIONS_EVENT, (msg) => this.dimensionsSource.next(JSON.parse(msg.data)));
-    webview.on(SWIPELEFT_EVENT, (msg) => console.log('SWIPELEFT_EVENT'));
-    webview.on(SWIPERIGHT_EVENT, (msg) => console.log('SWIPERIGHT_EVENT'));
-    webview.on(TAP_EVENT, (msg) =>  console.log('TAP_EVENT', msg.data));
+    webview.on(DEBUG_EVENT, this.handleDebugEvent);
+    webview.on(NS_BRIDGE_READY, this.onNSBridgreReady);
+    webview.on(UPDATE_PAGES_EVENT, this.handleUpdatePagesEvent);
+    webview.on(UPDATE_ORIENTATION_EVENT, this.handleUpdateOrientationEvent);
+    webview.on(UPDATE_PAGE_OFFSETS_EVENT, this.handleUpdatePageOffsetsEvent);
+    webview.on(UPDATE_DIMENSIONS_EVENT, this.handleUpdateDimensionsEvent);
+    webview.on(SWIPELEFT_EVENT, this.handleSwipeLeftEvent);
+    webview.on(SWIPERIGHT_EVENT, this.handleSwipeRightEvent);
+    webview.on(TAP_EVENT, this.handleTapEvent);
   }
+
+  onNSBridgreReady(): void {}
 
   onChangeUserView() {
-    this.userViewSource.next(this.userViewSource.value  === ReadiumUserView.ScrollOn ? ReadiumUserView.PagedOn : ReadiumUserView.ScrollOn);
+    this.readerService.userViewSource.next(
+      this.readerService.userViewSource.value === ReadiumUserView.ScrollOn
+        ? ReadiumUserView.PagedOn
+        : ReadiumUserView.ScrollOn
+    );
   }
 
   onSliderValueChange(args: any): void {
     const slider = <Slider>args.object;
-    this.activePageSource.next(slider.value);
+    this.readerService.activePageSource.next(slider.value);
+  }
+
+  private handleDebugEvent({ data }: WebViewEventData): void {
+    console.log(DEBUG_EVENT, data);
+  }
+
+  private handleUpdatePagesEvent({ data }: WebViewEventData): void {
+    console.log(UPDATE_PAGES_EVENT, data);
+    this.readerService.pagesSource.next(Number(JSON.parse(data)));
+  }
+
+  private handleUpdateOrientationEvent({ data }: WebViewEventData): void {
+    console.log(UPDATE_ORIENTATION_EVENT, data);
+    this.readerService.webviewOrientationSource.next(JSON.parse(data));
+  }
+
+  private handleUpdatePageOffsetsEvent({ data }: WebViewEventData): void {
+    console.log(UPDATE_PAGE_OFFSETS_EVENT, data);
+    this.readerService.pageOffsetsSource.next(JSON.parse(data));
+  }
+
+  private handleUpdateDimensionsEvent({ data }: WebViewEventData): void {
+    console.log(UPDATE_DIMENSIONS_EVENT, data);
+    this.readerService.dimensionsSource.next(JSON.parse(data));
+  }
+
+  private handleSwipeLeftEvent({ data }: WebViewEventData): void {
+    console.log(SWIPELEFT_EVENT, data);
+  }
+
+  private handleSwipeRightEvent({ data }: WebViewEventData): void {
+    console.log(SWIPERIGHT_EVENT, data);
+  }
+
+  private handleTapEvent({ data }: WebViewEventData): void {
+    console.log(TAP_EVENT, data);
   }
 }

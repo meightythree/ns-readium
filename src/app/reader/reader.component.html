@@ -11,16 +11,16 @@
     (loaded)="onLoaded($event)"
   ></nota:WebViewExt>
 
-  <FlexboxLayout flexDirection="row">
-    <Label [text]="activePage$ | async"></Label>
-    <Slider minValue="0" [maxValue]="pages$ | async" (valueChange)="onSliderValueChange($event)"></Slider>
-    <Label [text]="pages$ | async"></Label>
+  <FlexboxLayout flexDirection="row" alignItems="center" justifyContent="center">
+    <Label [text]="readerService.activePage$ | async"></Label>
+    <Slider minValue="0" [maxValue]="readerService.pages$ | async" (valueChange)="onSliderValueChange($event)" width="75%"></Slider>
+    <Label [text]="readerService.pages$ | async"></Label>
   </FlexboxLayout>
 
   <!-- userView -->
-  <Label text="mode: {{userView$ | async}} | pages: {{ pages$ | async }}"></Label>
-  <Label text="pageOffsets: {{ pageOffsets$ | async | json }}"></Label>
-  <Label text="dimensions: {{ dimensions$ | async | json }}" [textWrap]="true"></Label>
+  <Label text="mode: {{readerService.userView$ | async}} | pages: {{ readerService.pages$ | async }}"></Label>
+  <Label text="pageOffsets: {{ readerService.pageOffsets$ | async | json }}"></Label>
+  <Label text="dimensions: {{ readerService.dimensions$ | async | json }}" [textWrap]="true"></Label>
   <Button text="change mode" backgroundColor="blue" color="white" (tap)="onChangeUserView()"></Button>
   <!-- userView -->
 
