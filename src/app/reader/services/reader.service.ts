@@ -11,7 +11,7 @@ export class ReaderService {
     pagesSource: BehaviorSubject<number> = new BehaviorSubject(0);
     pages$ = this.pagesSource.asObservable();
     activePageSource: BehaviorSubject<number> = new BehaviorSubject(0);
-    activePage$ = this.pagesSource.asObservable();
+    activePage$ = this.activePageSource.asObservable();
     webviewOrientationSource: BehaviorSubject<ReadiumOrientation> = new BehaviorSubject({ isLandscape: null, isPortrait: null });
     isLandscape$ = this.webviewOrientationSource.asObservable().pipe(pluck('isLandscape'));
     isPortrait$ = this.webviewOrientationSource.asObservable().pipe(pluck('isPortrait'));

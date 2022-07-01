@@ -4,7 +4,7 @@ import {
   WebViewEventData,
   WebViewExt,
 } from "@nota/nativescript-webview-ext";
-import { combineLatest, of } from "rxjs";
+import { of } from "rxjs";
 import { map, tap, withLatestFrom } from "rxjs/operators";
 import { Slider } from "@nativescript/core";
 
@@ -26,6 +26,7 @@ import {
   TAP_EVENT,
 } from "./readium/scripts/gestures";
 import { ReaderService } from "./services/reader.service";
+import { readFirst } from "../utils/rxjs";
 
 @Component({
   selector: "ns-reader",
@@ -73,7 +74,7 @@ export class ReaderComponent implements OnInit {
 
   onSliderValueChange(args: any): void {
     const slider = <Slider>args.object;
-    this.readerService.activePageSource.next(slider.value);
+    // this.readerService.activePageSource.next(slider.value);
   }
 
   private handleDebugEvent({ data }: WebViewEventData): void {
@@ -100,11 +101,20 @@ export class ReaderComponent implements OnInit {
     this.readerService.dimensionsSource.next(JSON.parse(data));
   }
 
-  private handleSwipeLeftEvent({ data }: WebViewEventData): void {
+  private async handleSwipeLeftEvent({ data }: WebViewEventData): Promise<void> {
     console.log(SWIPELEFT_EVENT, data);
+    const userView = await readFirst(this.readerService.userView$);
+    const activePage = await readFirst(this.readerService.activePage$);
+    const dimensions = await readFirst(this.readerService.dimensions$);
+    if (ReadiumUserView.PagedOn === userView) {
+      const left = activePage * dimensions.innerWidth;
+      console.log({activePage, left})
+      await this.webview.nativeElement.executeJavaScript(`window.scrollTo({left: ${left}})`);
+      this.readerService.activePageSource.next(activePage + 1);
+    }
   }
 
-  private handleSwipeRightEvent({ data }: WebViewEventData): void {
+  private async handleSwipeRightEvent({ data }: WebViewEventData): Promise<void> {
     console.log(SWIPERIGHT_EVENT, data);
   }
 
