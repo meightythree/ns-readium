@@ -4,8 +4,8 @@ import {
   WebViewEventData,
   WebViewExt,
 } from "@nota/nativescript-webview-ext";
-import { combineLatest } from "rxjs";
-import { map, tap } from "rxjs/operators";
+import { combineLatest, of } from "rxjs";
+import { map, tap, withLatestFrom } from "rxjs/operators";
 import { Slider } from "@nativescript/core";
 
 import { ReadiumService } from "./readium/readium.service";
@@ -36,8 +36,9 @@ import { ReaderService } from "./services/reader.service";
 export class ReaderComponent implements OnInit {
   @ViewChild("webview") webview: ElementRef<WebViewExt>;
 
-  src$ = combineLatest([this.readerService.userView$]).pipe(
-    map(([userView]) => readiumHtml({ body: book, userView })),
+  src$ = of(book).pipe(
+    withLatestFrom(this.readerService.userView$),
+    map(([book, userView]) => readiumHtml({ body: book, userView })),
     tap((src) => setTimeout(() => (this.webview.nativeElement.src = src)))
   );
 
@@ -48,25 +49,26 @@ export class ReaderComponent implements OnInit {
   onLoaded(event: LoadEventData): void {
     this.readerService.webviewLoadedSource.next(true);
     const webview = event.object;
-    webview.on(DEBUG_EVENT, this.handleDebugEvent);
-    webview.on(NS_BRIDGE_READY, this.onNSBridgreReady);
-    webview.on(UPDATE_PAGES_EVENT, this.handleUpdatePagesEvent);
-    webview.on(UPDATE_ORIENTATION_EVENT, this.handleUpdateOrientationEvent);
-    webview.on(UPDATE_PAGE_OFFSETS_EVENT, this.handleUpdatePageOffsetsEvent);
-    webview.on(UPDATE_DIMENSIONS_EVENT, this.handleUpdateDimensionsEvent);
-    webview.on(SWIPELEFT_EVENT, this.handleSwipeLeftEvent);
-    webview.on(SWIPERIGHT_EVENT, this.handleSwipeRightEvent);
-    webview.on(TAP_EVENT, this.handleTapEvent);
+    webview.on(DEBUG_EVENT, e => this.handleDebugEvent(e));
+    webview.on(NS_BRIDGE_READY, _ => this.onNSBridgreReady());
+    webview.on(UPDATE_PAGES_EVENT, e => this.handleUpdatePagesEvent(e));
+    webview.on(UPDATE_ORIENTATION_EVENT, e => this.handleUpdateOrientationEvent(e));
+    webview.on(UPDATE_PAGE_OFFSETS_EVENT, e => this.handleUpdatePageOffsetsEvent(e));
+    webview.on(UPDATE_DIMENSIONS_EVENT, e => this.handleUpdateDimensionsEvent(e));
+    webview.on(SWIPELEFT_EVENT, e => this.handleSwipeLeftEvent(e));
+    webview.on(SWIPERIGHT_EVENT, e => this.handleSwipeRightEvent(e));
+    webview.on(TAP_EVENT, e => this.handleTapEvent(e));
   }
 
   onNSBridgreReady(): void {}
 
-  onChangeUserView() {
-    this.readerService.userViewSource.next(
+  async onChangeUserView(): Promise<void> {
+    const userView =
       this.readerService.userViewSource.value === ReadiumUserView.ScrollOn
         ? ReadiumUserView.PagedOn
-        : ReadiumUserView.ScrollOn
-    );
+        : ReadiumUserView.ScrollOn;
+    await this.webview.nativeElement.executeJavaScript(`window.updateUserView('${userView}');`);
+    this.readerService.userViewSource.next(userView);
   }
 
   onSliderValueChange(args: any): void {

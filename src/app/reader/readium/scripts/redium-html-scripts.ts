@@ -10,11 +10,15 @@ export const UPDATE_DIMENSIONS_EVENT = "UPDATE_DIMENSIONS_EVENT";
 export const readiumScripts = (options: ReadiumHtmlOptions) => `
     ${convertRemToPixels}
     ${calculateColumns}
+    ${updateUserView}
     document.calculateColumns = calculateColumns;
     document.isPortrait = ${isPortrait};
     document.isLandscape = ${isLandscape};
     ${calculatePages(options.userView)}
     ${readiumEvents(options)}
+    updateUserView('${options.userView}');
+
+    window.updateUserView = updateUserView;
 `;
 
 const readiumEvents = (options: ReadiumHtmlOptions) =>  `
@@ -80,5 +84,17 @@ const calculatePages = (userView: ReadiumUserView) => ` function calculatePages(
 
 const convertRemToPixels =  `function convertRemToPixels(rem) {
     return Number(rem.replace('rem', '')) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+}
+`;
+
+const updateUserView = `function updateUserView(userView) {
+    if ('${ReadiumUserView.PagedOn}' === userView) {
+        document.body.setAttribute('scroll', 'no');
+        document.body.style.overflow = 'hidden';
+    } else if ('${ReadiumUserView.ScrollOn}' === userView) {
+        document.body.setAttribute('scroll', 'initial');
+        document.body.style.overflow = 'initial';
+    }
+    document.documentElement.style.setProperty('--USER__view', userView);
 }
 `;

@@ -10,7 +10,7 @@ export const readiumHtml = (options: ReadiumHtmlOptions) => {
     const { head, body, userView } = options;
     const isPagedOn = ReadiumUserView.PagedOn === userView;
     return  `<!DOCTYPE html>
-    <html lang="en" style="--USER__view: ${userView}; --USER__fontOverride: readium-font-off; --RS__baseLineHeight: 1.5;">
+    <html lang="en" style="--USER__fontOverride: readium-font-off; --RS__baseLineHeight: 1.5;">
     <head>
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" />
@@ -21,7 +21,7 @@ export const readiumHtml = (options: ReadiumHtmlOptions) => {
         <style>${readiumCssAfter}</style>
         <script type="text/javascript">${hammer}</script>
     </head>
-    <body ${ isPagedOn ? ' scroll="no" ' : ''} style="${isPagedOn ? ' overflow: hidden; ' : ''};">
+    <body>
         <div id="first-readium-element"></div>
         ${body}
         <div id="last-readium-element"></div>
